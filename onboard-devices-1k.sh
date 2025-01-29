@@ -4,5 +4,5 @@
 for i in $(seq -f "%03g" 1 1000)
 do
   # Call the onboard-devices.sh script with the current number
-  bash onboard-devices.sh $i
+  bash onboard-device.sh $i
 done
