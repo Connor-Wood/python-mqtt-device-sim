@@ -35,4 +35,4 @@ az resource create --id "$res_id/clients/$replacement" --properties "{
     \"description\": \"This is a test publisher client\"
 }"
 
-python3 telemetry_producer.py --host=iotc-fabric-migration.westus2-1.ts.eventgrid.azure.net --user="$replacement"
+nohup python3 telemetry_producer.py --host=iotc-fabric-migration.westus2-1.ts.eventgrid.azure.net --user="$replacement" &
