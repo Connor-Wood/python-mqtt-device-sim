@@ -113,17 +113,29 @@ def main():
             raise TimeoutError("Timeout out trying to connect")
 
         # PUBLISH
-        topic = f"vehicles/{args.user}/telemetry".format(client_id=args.user)
+        propertiesTelemetryRatio = 9
+        propertiesTelemetryRatioi = 0
+        telemetry_topic = f"vehicles/{args.user}/telemetry".format(client_id=args.user)
+        prop_topic = f"vehicles/{args.user}/properties".format(client_id=args.user)
         temp = round(random.uniform(0,90))
+        running = True
+        year = round(random.uniform(1999,2025))
+        speedLimiter = round(random.uniform(60,100))
         while True:
+            running_choice = random.randint(0, 100)
+            if running_choice < 5:
+                running = not running
+
             lat = round(random.uniform(-90,90),6)
             lon = round(random.uniform(-180,180),6)
 
             temp += random.choice([-1, 1]) * random.randint(1, 2)
             temp = max(0, min(temp, 90))
+            if not running:
+                temp = 0
 
-            payload = json.dumps( {
-                "temperature": temp,
+            telemetry_payload = json.dumps( {
+                "speed": temp,
                 "coordinates": {"lat": lat, "lon": lon},
                 "padding": ''.join(random.choices("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", k=1000))
             })
@@ -131,9 +143,26 @@ def main():
             publish_properties = props.Properties(PacketTypes.PUBLISH)
             publish_properties.ContentType = "application/json"
             publish_properties.PayloadFormatIndicator = 1
-            publish_result = mqtt_client.publish(topic, payload, qos=1, properties=publish_properties)
-            print(f"Sending publish with payload \"{payload}\" on topic \"{topic}\" with message id {publish_result.mid}")
-            time.sleep(10)
+            publish_result = mqtt_client.publish(telemetry_topic, telemetry_payload, qos=1, properties=publish_properties)
+            # print(f"Sending publish with payload \"{telemetry_payload}\" on topic \"{telemetry_topic}\" with message id {publish_result.mid}")
+            
+            if propertiesTelemetryRatioi == propertiesTelemetryRatio:
+                propertiesTelemetryRatioi = 0
+                prop_payload = json.dumps( {
+                    "on": True if running else False,
+                    "year": year,
+                    "speedLimiter": speedLimiter,
+                    "padding": ''.join(random.choices("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", k=1000))
+                })
+
+                publish_properties = props.Properties(PacketTypes.PUBLISH)
+                publish_properties.ContentType = "application/json"
+                publish_properties.PayloadFormatIndicator = 1
+                publish_result = mqtt_client.publish(prop_topic, prop_payload, qos=1, properties=publish_properties)
+                # print(f"Sending publish with payload \"{telemetry_payload}\" on topic \"{telemetry_topic}\" with message id {publish_result.mid}")
+
+            time.sleep(1)
+            propertiesTelemetryRatioi += 1
 
     except KeyboardInterrupt:
         print("User initiated exit")
